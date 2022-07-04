@@ -39,6 +39,7 @@
 #include "net/mac/tsch/tsch.h"
 #include "lib/random.h"
 #include "sys/node-id.h"
+#include "net/routing/rpl-lite/rpl-neighbor.h"
 
 #include "sys/log.h"
 #define LOG_MODULE "App"
@@ -48,7 +49,8 @@
 #define SEND_INTERVAL		  (1 * CLOCK_SECOND)
 
 PROCESS(node_process, "TSCH Schedule Node");
-AUTOSTART_PROCESSES(&node_process);
+PROCESS(lct_sched, "TSCH LCT Schedule");
+AUTOSTART_PROCESSES(&node_process,&lct_sched);
 
 /*
  * Note! This is not an example how to design a *good* schedule for TSCH,
@@ -83,12 +85,12 @@ initialize_tsch_schedule(void)
 
   /*Other "Catch-all"*/
   tsch_schedule_add_link(sf_common,
-      LINK_OPTION_SHARED,
+      LINK_OPTION_RX | LINK_OPTION_TX | LINK_OPTION_SHARED,
       LINK_TYPE_ADVERTISING, &tsch_broadcast_address,
       APP_SLOTFRAME_SIZE/2, channel_offset, 1);
 
   for (i = 0; i < TSCH_SCHEDULE_MAX_LINKS - 25; ++i) {
-    LOG_INFO_("Add link %d",i);
+
     uint8_t link_options;
     linkaddr_t addr;
     uint16_t remote_id = i + 1;
@@ -112,14 +114,17 @@ initialize_tsch_schedule(void)
         slot_offset, channel_offset, 0);
     
     tsch_schedule_add_link(sf_common,
-        link_options,
+        LINK_OPTION_TX,
         LINK_TYPE_NORMAL, &addr,
-        random_rand() % APP_SLOTFRAME_SIZE, random_rand() %4, 0);
-
+        remote_id+node_id, (remote_id+node_id) % 4, 0);
+    
     tsch_schedule_add_link(sf_common,
-        link_options,
+        LINK_OPTION_RX,
         LINK_TYPE_NORMAL, &addr,
-        random_rand() % APP_SLOTFRAME_SIZE, random_rand() %4, 0);
+        remote_id+node_id, (remote_id+node_id) % 4, 0);
+        
+    LOG_INFO_("Node: %u Remote: %u -  Add link Channel: %d\n",node_id,remote_id, (remote_id+node_id) % 4);
+
   }
 }
 
@@ -141,6 +146,25 @@ rx_packet(struct simple_udp_connection *c,
     LOG_INFO_6ADDR(sender_addr);
     LOG_INFO_(", seqnum %" PRIu32 "\n", seqnum);
   }
+}
+
+PROCESS_THREAD(lct_sched, ev, data)
+{
+  uip_ipaddr_t dst;
+  struct tsch_neighbor *n;
+  linkaddr_t *nbraddr;
+  PROCESS_BEGIN();
+  while (1){
+    if(NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dst)) {
+      n = tsch_queue_get_time_source();
+      nbraddr = tsch_queue_get_nbr_address(n);
+      int teste =  rpl_neighbor_count();
+      printf("Ninho: Meu pai é %u e o RPL tem %i vizinhos: \n", &nbraddr->u8[7], teste);
+    }
+    process_poll(&node_process);
+    PROCESS_YIELD();
+  }
+  PROCESS_END();
 }
 
 PROCESS_THREAD(node_process, ev, data)
@@ -176,6 +200,8 @@ PROCESS_THREAD(node_process, ev, data)
       simple_udp_sendto(&udp_conn, &seqnum, sizeof(seqnum), &dst);
     }
     etimer_set(&periodic_timer, SEND_INTERVAL);
+    process_poll(&lct_sched);
+    PROCESS_YIELD();
   }
 
   PROCESS_END();

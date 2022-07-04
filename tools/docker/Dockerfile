@@ -1,4 +1,4 @@
-FROM i386/ubuntu:18.04
+FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -7,37 +7,40 @@ USER root
 
 # Tools
 RUN apt-get -qq update && \
-    apt-get -qq -y --no-install-recommends install gnupg ca-certificates software-properties-common > /dev/null
+    apt-get -qq -y --no-install-recommends install \
+      ca-certificates \
+      gnupg \
+      software-properties-common > /dev/null && \
+    apt-get -qq clean
 
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
-  echo "deb http://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-xamarin.list && \
+  echo "deb http://download.mono-project.com/repo/ubuntu stable-focal main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
   add-apt-repository ppa:mosquitto-dev/mosquitto-ppa && \
   apt-get -qq update && \
   apt-get -qq -y --no-install-recommends install \
     ant \
     build-essential \
-    doxygen \
     gdb \
     git \
     gtk-sharp2 \
     iputils-tracepath \
     iputils-ping \
-    libcanberra-gtk-module:i386 \
-    libcoap-1-0-bin \
+    less \
+    lib32z1 \
+    libcanberra-gtk-module \
+    libcoap2-bin \
     libfreetype6-dev \
     libgtk2.0-0 \
+    libncurses5 \
     libpng-dev \
     mono-complete \
     mosquitto \
     mosquitto-clients \
     net-tools \
     openjdk-11-jdk \
-    python-dev \
     python3-dev \
-    python-pip \
     python3-pip \
     python3-setuptools \
-    python-serial \
     python3-serial \
     rlwrap \
     sudo \
@@ -55,10 +58,9 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E03280
   && apt-get -qq clean
 
 # Install ARM toolchain
-RUN wget -nv https://github.com/Yagoor/gcc-arm-none-eabi/releases/download/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 && \
-  tar xjf gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/gcc-arm-none-eabi-10.3-2021.10/* /usr/local/ && \
-  rm -rf /tmp/gcc-arm-none-eabi-10.3-2021.10 gcc-arm-none-eabi-10.3-2021.10-i386-linux.tar.bz2
+RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
+  tar xjf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner && \
+  rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
 RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
@@ -89,39 +91,32 @@ RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/n
 ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 
 # Install nRF Command Line tools
-RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxi386.tar.gz && \
+RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
   mkdir /tmp/nrf-cli-tools && \
-  tar xzf nRFCommandLineTools10121Linuxi386.tar.gz -C /tmp/nrf-cli-tools && \
-  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_i386.deb && \
-  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-i386.deb && \
-  ln -s /opt/SEGGER/JLink_V688a/libjlinkarm.so /opt/SEGGER/JLink_V688a/libjlinkarm_x86.so && \
-  rm -rf nRFCommandLineTools10121Linuxi386.tar.gz /tmp/nrf-cli-tools
+  tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
+  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
+  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
+  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
 
-# Install sphinx and sphinx_rtd_theme, required for building and testing the
-# readthedocs API documentation
-RUN pip -q install --upgrade pip
-RUN pip -q install setuptools && pip -q install sphinx_rtd_theme sphinx
-# Install matplotlib for result visualization
-RUN pip3 -q install --upgrade pip
-RUN pip3 -q install matplotlib
+# Sphinx is required for building the readthedocs API documentation.
+# Matplotlib is required for result visualization.
+# Nrfutil 6.1.3 does not work with protobuf 4, so install latest 3.x
+# Keep the image size down by removing the pip cache when done.
+RUN python3 -m pip -q install --upgrade pip && \
+    python3 -m pip -q install \
+      setuptools \
+      sphinx_rtd_theme \
+      sphinx \
+      matplotlib \
+      'protobuf<=4' && \
+    python3 -m pip -q install \
+      nrfutil && \
+    rm -rf /root/.cache
 
-# Install nrfutil and work around broken pc_ble_driver_py dependency
-RUN pip3 -q install nrfutil && \
-  pip3 -q install --no-deps -t /usr/local/lib/python3.6/dist-packages --python-version 3.6 --ignore-requires-python --upgrade nrfutil
-
-# Make sure we're using Java 11 for Cooja
-RUN update-java-alternatives --set /usr/lib/jvm/java-1.11.0-openjdk-i386
-
-# Create user, enable X forwarding, add to group dialout
-# -e DISPLAY=$DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix
-RUN export uid=1000 gid=1000 && \
-    mkdir -p /home/user && \
-    echo "user:x:${uid}:${gid}:user,,,:/home/user:/bin/bash" >> /etc/passwd && \
-    echo "user:x:${uid}:" >> /etc/group && \
-    echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers && \
-    chmod 0440 /etc/sudoers && \
-    chown ${uid}:${gid} -R /home/user && \
-    usermod -aG dialout user
+# Create user, add to groups dialout and sudo, and configure sudoers.
+RUN adduser --disabled-password --gecos '' user && \
+    usermod -aG dialout,plugdev,sudo user && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Set user for what comes next
 USER user
@@ -130,19 +125,31 @@ USER user
 ENV HOME                /home/user
 ENV CONTIKI_NG          ${HOME}/contiki-ng
 ENV COOJA               ${CONTIKI_NG}/tools/cooja
-ENV                     PATH="${HOME}:${PATH}"
+ENV                     PATH="${HOME}/.local/bin:${PATH}"
 ENV                     LC_ALL=C.UTF-8
 ENV                     LANG=C.UTF-8
 WORKDIR                 ${HOME}
 
 # Create Cooja shortcut
-RUN echo "#!/bin/bash\nant -Dbasedir=${COOJA} -f ${COOJA}/build.xml run" > ${HOME}/cooja && \
-  chmod +x ${HOME}/cooja
+COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
+
+# Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
+# Use a binary from the Doxygen homepage, static linking started with 1.9.3.
+# Remove the PDF manual and html directory to reduce image size.
+# Use the most recent version of ccache to ensure it supports the compiler
+# versions in the docker image.
+RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
+    tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
+    rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
+    (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz && \
+    tar xf ccache-4.6.1-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.1-linux-x86_64/ccache && \
+    rm ccache-4.6.1-linux-x86_64.tar.xz
 
 # Download, build and install Renode
 RUN git clone --quiet https://github.com/renode/renode.git \
   && cd ${HOME}/renode \
-  && git checkout v1.3 \
+  && git checkout v1.13.0 \
   && ./build.sh
 ENV PATH="${HOME}/renode:${PATH}"
 
