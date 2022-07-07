@@ -64,8 +64,6 @@ TARGET_UPPERCASE := ${strip ${shell echo $(TARGET) | sed y!$(LOWERCASE)!$(UPPERC
 CFLAGS += -DCONTIKI=1 -DCONTIKI_TARGET_$(TARGET_UPPERCASE)=1
 CFLAGS += -DCONTIKI_TARGET_STRING=\"$(TARGET)\"
 
-CFLAGS += -Wno-unused-const-variable
-
 LDFLAGS_WERROR ?= -Wl,--fatal-warnings
 
 ifeq ($(WERROR),1)
@@ -91,9 +89,6 @@ ${patsubst %.s,%.o, \
 $(1) \
 }}}}
 endef
-
-CONTIKI_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
-PROJECT_OBJECTFILES = ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
 
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
@@ -337,6 +332,9 @@ endif
 ### to create one
 CONTIKI_NG_PROJECT_MAP = $(BUILD_DIR_BOARD)/$(basename $(notdir $@)).map
 
+CONTIKI_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(CONTIKI_SOURCEFILES)}}
+PROJECT_OBJECTFILES += ${addprefix $(OBJECTDIR)/,${call oname, $(PROJECT_SOURCEFILES)}}
+
 .PHONY: all clean distclean usage help targets boards savetarget savedefines viewconf
 
 clean:
@@ -458,19 +456,25 @@ ifndef LD
 endif
 
 ifndef CUSTOM_RULE_LINK
+# Targets can define LD_START_GROUP and LD_END_GROUP to resolve circular
+# dependencies between linked libraries, see:
+# https://stackoverflow.com/questions/5651869/gcc-what-are-the-start-group-and-end-group-command-line-options/5651895
+# These are not defined by default since it has a significant performance cost.
+TARGET_LIBEXTRAS = $(LD_START_GROUP) $(TARGET_LIBFILES) $(LD_END_GROUP)
+
 # Cooja passes LIBNAME through the environment and all .csc files contain
 # calls to make with a target that is *not* what Cooja needs. Add
 # a compatibility line for link rule so we can have a single rule that
 # outputs to LIBNAME on all platforms.
 $(BUILD_DIR_BOARD)/%.$(TARGET): LIBNAME ?= $@
-$(BUILD_DIR_BOARD)/%.$(TARGET): %.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
+$(BUILD_DIR_BOARD)/%.$(TARGET): $(OBJECTDIR)/%.o $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) $(CONTIKI_NG_TARGET_LIB)
 ifdef REDEFINE_PRINTF
 	@echo Redefining printf,sprintf,vsnprintf,etc.
 	$(Q)$(foreach OBJ,$^, $(OBJCOPY) --redefine-syms $(CONTIKI)/arch/platform/$(TARGET)/redefine.syms $(OBJ); )
 endif
 	$(TRACE_LD)
 	$(Q)$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} \
-	    ${filter %.a,$^} $(TARGET_LIBFILES) -o $(LIBNAME)
+	    ${filter %.a,$^} $(TARGET_LIBEXTRAS) -o $(LIBNAME)
 endif
 
 %.$(TARGET): $(BUILD_DIR_BOARD)/%.$(TARGET)
