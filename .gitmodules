@@ -40,3 +40,6 @@
 [submodule "examples/pythonLogParser"]
 	path = examples/pythonLogParser
 	url = https://github.com/ivanilsonjunior/pythonLogParser/
+[submodule "examples/minimalplus"]
+	path = examples/minimalplus
+	url = https://github.com/ivanilsonjunior/minimalplus.git
