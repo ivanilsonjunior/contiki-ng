@@ -31,20 +31,25 @@
 #ifndef PROJECT_CONF_H_
 #define PROJECT_CONF_H_
 
-/* Set to enable TSCH security */
-#ifndef WITH_SECURITY
-#define WITH_SECURITY 0
-#endif /* WITH_SECURITY */
+
 
 #define LOG_CONF_LEVEL_RPL                         LOG_LEVEL_INFO
 #define LOG_CONF_LEVEL_TCPIP                       LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_IPV6                        LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_6LOWPAN                     LOG_LEVEL_WARN
 #define LOG_CONF_LEVEL_MAC                         LOG_LEVEL_INFO
-#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_INFO 
-#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_DBG
-#define TSCH_LOG_CONF_PER_SLOT                     0
+#define LOG_CONF_LEVEL_FRAMER                      LOG_LEVEL_NONE
+#define LOG_CONF_LEVEL_6TOP                        LOG_LEVEL_DBG
 
+
+/* Application settings */
+#define APP_SEND_INTERVAL_SEC 3
+#define APP_WARM_UP_PERIOD_SEC 300
+
+/* Set to enable TSCH security */
+#ifndef WITH_SECURITY
+#define WITH_SECURITY 0
+#endif /* WITH_SECURITY */
 
 /*******************************************************/
 /********************* Enable TSCH *********************/
@@ -69,13 +74,13 @@
 /*******************************************************/
 
 /* IEEE802.15.4 PANID */
-#define IEEE802154_CONF_PANID 0xabcd
+#define IEEE802154_CONF_PANID 0x0DE1
 
 /* Do not start TSCH at init, wait for NETSTACK_MAC.on() */
 #define TSCH_CONF_AUTOSTART 0
 
 /* 6TiSCH schedule length */
-#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 101
+#define TSCH_SCHEDULE_CONF_DEFAULT_LENGTH 11
 
 #if WITH_SECURITY
 
