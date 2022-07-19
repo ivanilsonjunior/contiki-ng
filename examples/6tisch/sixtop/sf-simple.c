@@ -110,7 +110,7 @@ print_cell_list(const uint8_t *cell_list, uint16_t cell_list_len)
 
   for(i = 0; i < cell_list_len; i += sizeof(cell)) {
     read_cell(&cell_list[i], &cell);
-    //PRINTF("sf-simple: %u ", cell.timeslot_offset);
+    PRINTF("sf-simple: %u ", cell.timeslot_offset);
   }
 }
 
@@ -138,11 +138,11 @@ add_links_to_schedule(const linkaddr_t *peer_addr, uint8_t link_option,
       continue;
     }
 
-    //PRINTF("sf-simple: Schedule link %d as %s with node ",
-    //       cell.timeslot_offset,
-     //      link_option == LINK_OPTION_RX ? "RX" : "TX");
-    //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-    //PRINTF("\n");
+    PRINTF("sf-simple: Schedule link %d as %s with node ",
+           cell.timeslot_offset,
+           link_option == LINK_OPTION_RX ? "RX" : "TX");
+    PRINTLLADDR((uip_lladdr_t *)peer_addr);
+    PRINTF("\n");
     tsch_schedule_add_link(slotframe,
                            link_option, LINK_TYPE_NORMAL, peer_addr,
                            cell.timeslot_offset, cell.channel_offset, 1);
@@ -248,16 +248,16 @@ add_req_input(const uint8_t *body, uint16_t body_len, const linkaddr_t *peer_add
                             (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_ADD,
                             &cell_list, &cell_list_len,
                             body, body_len) != 0) {
-    //PRINTF("sf-simple: Parse error on add request\n");
+    PRINTF("sf-simple: Parse error on add request\n");
     return;
   }
 
-  //PRINTF("sf-simple: Received a 6P Add Request for %d links from node ",
-  //       num_cells);
-  //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-  //PRINTF(" with LinkList : ");
-  //print_cell_list(cell_list, cell_list_len);
-  //PRINTF("\n");
+  PRINTF("sf-simple: Received a 6P Add Request for %d links from node ",
+         num_cells);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
+  print_cell_list(cell_list, cell_list_len);
+  PRINTF("\n");
 
   slotframe = tsch_schedule_get_slotframe_by_handle(slotframe_handle);
   if(slotframe == NULL) {
@@ -288,9 +288,9 @@ add_req_input(const uint8_t *body, uint16_t body_len, const linkaddr_t *peer_add
 
     if(feasible_link == num_cells) {
       /* Links are feasible. Create Link Response packet */
-      //PRINTF("sf-simple: Send a 6P Response to node ");
-      //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-      //PRINTF("\n");
+      PRINTF("sf-simple: Send a 6P Response to node ");
+      PRINTLLADDR((uip_lladdr_t *)peer_addr);
+      PRINTF("\n");
       
       sixp_output(SIXP_PKT_TYPE_RESPONSE,
                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
@@ -324,16 +324,16 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
                             (sixp_pkt_code_t)(uint8_t)SIXP_PKT_CMD_DELETE,
                             &cell_list, &cell_list_len,
                             body, body_len) != 0) {
-    //PRINTF("sf-simple: Parse error on delete request\n");
+    PRINTF("sf-simple: Parse error on delete request\n");
     return;
   }
 
-  //PRINTF("sf-simple: Received a 6P Delete Request for %d links from node ",
-  //       num_cells);
-  //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-  //PRINTF(" with LinkList : ");
-  //print_cell_list(cell_list, cell_list_len);
-  //PRINTF("\n");
+  PRINTF("sf-simple: Received a 6P Delete Request for %d links from node ",
+         num_cells);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
+  print_cell_list(cell_list, cell_list_len);
+  PRINTF("\n");
 
   slotframe = tsch_schedule_get_slotframe_by_handle(slotframe_handle);
   if(slotframe == NULL) {
@@ -361,9 +361,9 @@ delete_req_input(const uint8_t *body, uint16_t body_len,
   }
 
   /* Links are feasible. Create Link Response packet */
-  //PRINTF("sf-simple: Send a 6P Response to node ");
-  //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-  //PRINTF("\n");
+  PRINTF("sf-simple: Send a 6P Response to node ");
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF("\n");
   sixp_output(SIXP_PKT_TYPE_RESPONSE,
               (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
               SF_SIMPLE_SFID,
@@ -432,12 +432,12 @@ response_input(sixp_pkt_rc_t rc,
                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                                   &cell_list, &cell_list_len,
                                   body, body_len) != 0) {
-          //PRINTF("sf-simple: Parse error on add response\n");
+          PRINTF("sf-simple: Parse error on add response\n");
           return;
         }
-        //PRINTF("sf-simple: Received a 6P Add Response with LinkList : ");
-        //print_cell_list(cell_list, cell_list_len);
-       // PRINTF("\n");
+        PRINTF("sf-simple: Received a 6P Add Response with LinkList : ");
+        print_cell_list(cell_list, cell_list_len);
+        PRINTF("\n");
         add_links_to_schedule(peer_addr, LINK_OPTION_TX,
                               cell_list, cell_list_len);
         break;
@@ -446,12 +446,12 @@ response_input(sixp_pkt_rc_t rc,
                                   (sixp_pkt_code_t)(uint8_t)SIXP_PKT_RC_SUCCESS,
                                   &cell_list, &cell_list_len,
                                   body, body_len) != 0) {
-          //PRINTF("sf-simple: Parse error on add response\n");
+          PRINTF("sf-simple: Parse error on add response\n");
           return;
         }
-        //PRINTF("sf-simple: Received a 6P Delete Response with LinkList : ");
-        //print_cell_list(cell_list, cell_list_len);
-        //PRINTF("\n");
+        PRINTF("sf-simple: Received a 6P Delete Response with LinkList : ");
+        print_cell_list(cell_list, cell_list_len);
+        PRINTF("\n");
         remove_links_to_schedule(cell_list, cell_list_len);
         break;
       case SIXP_PKT_CMD_COUNT:
@@ -510,7 +510,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
         index++;
         slot_check++;
       } else if(slot_check > TSCH_SCHEDULE_DEFAULT_LENGTH) {
-        //PRINTF("sf-simple:! Number of trials for free slot exceeded...\n");
+        PRINTF("sf-simple:! Number of trials for free slot exceeded...\n");
         return -1;
         break; /* exit while loop */
       }
@@ -538,7 +538,7 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
                             (const uint8_t *)cell_list,
                             index * sizeof(sf_simple_cell_t), 0,
                             req_storage, sizeof(req_storage)) != 0) {
-    //PRINTF("sf-simple: Build error on add request\n");
+    PRINTF("sf-simple: Build error on add request\n");
     return -1;
   }
 
@@ -549,12 +549,12 @@ sf_simple_add_links(linkaddr_t *peer_addr, uint8_t num_links)
               req_storage, req_len, peer_addr,
               NULL, NULL, 0);
 
-  //PRINTF("sf-simple: Send a 6P Add Request for %d links to node ",
-  //       num_links);
-  //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-  //PRINTF(" with LinkList : ");
+  PRINTF("sf-simple: Send a 6P Add Request for %d links to node ",
+         num_links);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
   print_cell_list((const uint8_t *)cell_list, index * sizeof(sf_simple_cell_t));
-  //PRINTF("\n");
+  PRINTF("\n");
 
   return 0;
 }
@@ -604,7 +604,7 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
                             (const uint8_t *)&cell, sizeof(cell),
                             0,
                             req_storage, sizeof(req_storage)) != 0) {
-    //PRINTF("sf-simple: Build error on add request\n");
+    PRINTF("sf-simple: Build error on add request\n");
     return -1;
   }
   /* The length of fixed part is 4 bytes: Metadata, CellOptions, and NumCells */
@@ -615,12 +615,12 @@ sf_simple_remove_links(linkaddr_t *peer_addr)
               req_storage, req_len, peer_addr,
               NULL, NULL, 0);
 
-  //PRINTF("sf-simple: Send a 6P Delete Request for %d links to node ",
-   //      1);
-  //PRINTLLADDR((uip_lladdr_t *)peer_addr);
-  //PRINTF(" with LinkList : ");
-  //print_cell_list((const uint8_t *)&cell, sizeof(cell));
-  //PRINTF("\n");
+  PRINTF("sf-simple: Send a 6P Delete Request for %d links to node ",
+         1);
+  PRINTLLADDR((uip_lladdr_t *)peer_addr);
+  PRINTF(" with LinkList : ");
+  print_cell_list((const uint8_t *)&cell, sizeof(cell));
+  PRINTF("\n");
 
   return 0;
 }
