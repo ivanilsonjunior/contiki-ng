@@ -44,8 +44,11 @@ CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
 
 ### Compiler definitions
 
+# LTO is available in GCC 4.7.2, but crashes for MSP430.
+NO_LTO_TARGET = 1
+
 ifeq ($(WERROR),1)
-CFLAGSWERROR= -Wall -Werror
+  CFLAGSWERROR = -Werror
 endif
 
 CC       = msp430-gcc
@@ -108,7 +111,7 @@ CLEAN += *.firmware *.ihex
 %.firmware:	%.${TARGET}
 	mv $< $@
 
-%.ihex: %.$(TARGET)
+%.ihex: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(OBJCOPY) $^ -O ihex $@
 
 $(COOJA_PATH)/build.xml:
@@ -124,8 +127,8 @@ $(COOJA_PATH)/mspsim/build.xml: $(COOJA_PATH)/build.xml
 $(COOJA_PATH)/mspsim/mspsim.jar: $(COOJA_PATH)/mspsim/build.xml
 	cd $(COOJA_PATH)/mspsim && ant jar
 
-%.mspsim:	%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
+%.mspsim: $(BUILD_DIR_BOARD)/%.${TARGET} ${COOJA_PATH}/mspsim/mspsim.jar
 	$(JAVA) -jar ${COOJA_PATH}/mspsim/mspsim.jar -platform=${TARGET} $<
 
-%.mspsim-maptable: %.$(TARGET)
+%.mspsim-maptable: $(BUILD_DIR_BOARD)/%.$(TARGET)
 	$(JAVA) -classpath ${COOJA_PATH}/mspsim/mspsim.jar se.sics.mspsim.util.MapTable $(CONTIKI_NG_PROJECT_MAP)
