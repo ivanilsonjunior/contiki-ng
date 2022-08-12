@@ -4,7 +4,8 @@ ifdef nodeid
 CFLAGS += -DNODEID=$(nodeid)
 endif
 
-CFLAGS += -gstabs+
+DEBUG = 1
+CFLAGS_DEBUG = -gstabs+
 
 ### Define the CPU directory
 CONTIKI_CPU = $(CONTIKI_NG_RELOC_CPU_DIR)/msp430
@@ -80,6 +81,7 @@ CFLAGSNO = -Wall -mmcu=$(MCU) $(CFLAGSWERROR)
 endif
 CFLAGS  += -Os -fno-strict-aliasing -std=gnu99
 LDFLAGS += -mmcu=$(MCU) -Wl,-Map=$(CONTIKI_NG_PROJECT_MAP)
+LDFLAGS += -Wl,--sort-section=alignment
 
 ### These flags can reduce the code size and RAM usage with up to 10%
 SMALL ?= 1
