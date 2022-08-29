@@ -39,12 +39,7 @@ endif
 
 JAVA_FRAMEWORK ?= JavaNativeFoundation
 
-ifeq ($(HOST_OS),Windows)
-  JAVA_OS_NAME = win32
-  CC = mingw32-gcc
-  CFLAGS += -D__int64\="long long"
-  LDFLAGS += -shared -Wl,--add-stdcall-alias -L/usr/lib/mingw
-else ifeq ($(HOST_OS),Darwin)
+ifeq ($(HOST_OS),Darwin)
   JAVA_OS_NAME = darwin
   CC = gcc
   CFLAGS += -fno-common -DHAVE_SNPRINTF
@@ -79,7 +74,7 @@ CURDIR := $(shell pwd)
 
 .PHONY: $(MAKECMDGOALS)
 $(MAKECMDGOALS):
-	$(Q)ant -e -logger org.apache.tools.ant.listener.SimpleBigProjectLogger -f $(COOJA_DIR)/build.xml run_bigmem -Dargs="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
+	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_DIR) run --args="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
 endif
 endif ## QUICKSTART
 
@@ -125,9 +120,12 @@ $(BUILD_DIR_BOARD)/%.$(TARGET): MAPFILE = $(LIBNAME:.cooja=.map)
 # This is mtype<NNN>.o which is built from platform.c with
 # CLASSNAME passed from the environment by Cooja.
 MTYPE_OBJ = $(LIBNAME:.cooja=.o)
+MTYPE_DEP = $(DEPDIR)/$(notdir $(LIBNAME:.cooja=.d))
+
+TARGET_DEPFILES += $(MTYPE_DEP)
 
 PROJECT_OBJECTFILES += $(MTYPE_OBJ)
 
-$(MTYPE_OBJ): platform.c | $(DEPDIR)
+$(MTYPE_OBJ): platform.c $(MTYPE_DEP) | $(DEPDIR)
 	$(TRACE_CC)
-	$(Q)$(CCACHE) $(CC) $(CFLAGS) -c $< -o $@
+	$(Q)$(CCACHE) $(CC) $(CFLAGS) -MT $@ -MMD -MP -MF $(MTYPE_DEP) -c $< -o $@

@@ -6,29 +6,46 @@ ENV DEBIAN_FRONTEND noninteractive
 USER root
 
 # Tools
+# build-essential: development tools.
+# gdb: development tools.
+# git: development tools.
+# iputils-ping: used by regression tests.
+# less: convenience tool.
+# lib32z1: 32-bit libz, probably used by some old 32-bit binary.
+# libcanberra-gtk-module: remove warning message from renode.
+# libcoap2-bin: used by regression tests.
+# libxtst6: required for GraalVM/Java11 to run Cooja in GUI mode.
+# mosquitto: used by the regression tests.
+# mtr-tiny: used by the regression tests.
+# net-tools: used by the regression tests.
+# python3: used by scripts.
+# snmp: used by the regression tests.
+# sudo: used by the regression tests.
+# unzip: required during docker image build for software installation.
+# valgrind: used by the regression tests.
+# wget: used by the regression tests.
 RUN apt-get -qq update && \
     apt-get -qq -y --no-install-recommends install \
-      ca-certificates > /dev/null && \
+      ca-certificates \
+      gnupg \
+      software-properties-common > /dev/null && \
+  add-apt-repository -y -n ppa:cwchien/gradle && \
+  apt-get update && \
   apt-get -qq -y --no-install-recommends install \
-    ant \
     build-essential \
     gdb \
     git \
-    gtk-sharp2 \
     iputils-ping \
     less \
     lib32z1 \
     libcanberra-gtk-module \
     libcoap2-bin \
-    libfreetype6-dev \
-    libgtk2.0-0 \
-    libncurses5 \
     libpng-dev \
+    libxtst6 \
     mosquitto \
     mosquitto-clients \
     mtr-tiny \
     net-tools \
-    openjdk-11-jdk \
     python3-dev \
     python3-pip \
     python3-setuptools \
@@ -37,7 +54,6 @@ RUN apt-get -qq update && \
     sudo \
     screen \
     srecord \
-    uml-utilities \
     unzip \
     libusb-1.0-0 \
     valgrind \
@@ -45,8 +61,25 @@ RUN apt-get -qq update && \
     smitools \
     snmp \
     snmp-mibs-downloader \
-    > /dev/null \
-  && apt-get -qq clean
+    > /dev/null && \
+  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  dpkg --unpack graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  apt-get -qq -y --no-install-recommends install \
+    ca-certificates-java \
+    java-common \
+    libnss3 \
+    libnspr4 \
+    libsqlite3-0 \
+    > /dev/null && \
+  apt-get -qq -y --no-install-recommends install \
+    ant \
+    gradle \
+    > /dev/null && \
+  rm graalvm-ce-java11_amd64_22.2.0-0.deb && \
+  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  dpkg -i graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  rm graalvm-ce-java17_amd64_22.2.0-0.deb && \
+  apt-get -qq clean
 
 # Install ARM toolchain
 RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
@@ -58,20 +91,6 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   tar xjf mspgcc*.tar.bz2 -C /tmp/ && \
   cp -f -r /tmp/msp430/* /usr/local/ && \
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
-
-# Install NXP toolchain (partial, with binaries excluded. Download from nxp.com)
-RUN wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part1.tar.bz2 && \
-  wget -nv http://simonduq.github.io/resources/ba-elf-gcc-4.7.4-part2.tar.bz2 && \
-  wget -nv http://simonduq.github.io/resources/jn516x-sdk-4163-1416.tar.bz2 && \
-  mkdir /tmp/jn516x-sdk /tmp/ba-elf-gcc && \
-  tar xjf jn516x-sdk-*.tar.bz2 -C /tmp/jn516x-sdk && \
-  tar xjf ba-elf-gcc-*part1.tar.bz2 -C /tmp/ba-elf-gcc && \
-  tar xjf ba-elf-gcc-*part2.tar.bz2 -C /tmp/ba-elf-gcc && \
-  cp -f -r /tmp/jn516x-sdk /usr/ && \
-  cp -f -r /tmp/ba-elf-gcc /usr/ && \
-  rm -rf jn516x*.bz2 ba-elf-gcc*.bz2 /tmp/ba-elf-gcc* /tmp/jn516x-sdk*
-
-ENV PATH="/usr/ba-elf-gcc/bin:${PATH}"
 
 ## Install nRF52 SDK
 RUN wget -nv https://developer.nordicsemi.com/nRF5_IoT_SDK/nRF5_IoT_SDK_v0.9.x/nrf5_iot_sdk_3288530.zip && \
@@ -85,9 +104,10 @@ ENV NRF52_SDK_ROOT /usr/nrf52-sdk
 RUN wget -nv https://www.nordicsemi.com/-/media/Software-and-other-downloads/Desktop-software/nRF-command-line-tools/sw/Versions-10-x-x/10-12-1/nRFCommandLineTools10121Linuxamd64.tar.gz && \
   mkdir /tmp/nrf-cli-tools && \
   tar xzf nRFCommandLineTools10121Linuxamd64.tar.gz -C /tmp/nrf-cli-tools && \
-  dpkg -i /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
-  dpkg -i /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
-  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools
+  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/JLink_Linux_V688a_x86_64.deb && \
+  apt-get -qq -y --no-install-recommends install /tmp/nrf-cli-tools/nRF-Command-Line-Tools_10_12_1_Linux-amd64.deb && \
+  rm -rf nRFCommandLineTools10121Linuxamd64.tar.gz /tmp/nrf-cli-tools && \
+  apt-get -qq clean
 
 # Install Renode from github releases
 ARG RENODE_VERSION=1.13.0
@@ -99,15 +119,10 @@ RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSIO
 # Sphinx is required for building the readthedocs API documentation.
 # RTD requirements are shared with .readthedocs.yaml for build consistency - check RTD build if modifying.
 # Matplotlib is required for result visualization.
-# Nrfutil 6.1.3 does not work with protobuf 4, so install latest 3.x
 # Keep the image size down by removing the pip cache when done.
 COPY files/rtd_requirements.txt /tmp
-RUN python3 -m pip -q install --upgrade pip && \
-    python3 -m pip -q install \
-      setuptools \
+RUN python3 -m pip -q install \
       matplotlib \
-      'protobuf<=4' && \
-    python3 -m pip -q install \
       nrfutil && \
     python3 -m pip -q install -r /tmp/rtd_requirements.txt && \
     rm -rf /root/.cache /tmp/rtd_requirements.txt
@@ -131,6 +146,8 @@ WORKDIR                 ${HOME}
 
 # Create Cooja shortcut
 COPY --chown=user:user files/cooja ${HOME}/.local/bin/cooja
+# Add aliases for CI. Use a file to avoid quoting issues.
+COPY --chown=user:user files/bash_aliases ${HOME}/.bash_aliases
 
 # Doxygen 1.8.17 in Ubuntu 20.04 gives (false) warnings on mqtt.h.
 # Use a binary from the Doxygen homepage, static linking started with 1.9.3.
@@ -141,9 +158,9 @@ RUN wget -nv https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz && \
     tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
     (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
-    wget -nv https://github.com/ccache/ccache/releases/download/v4.6.1/ccache-4.6.1-linux-x86_64.tar.xz && \
-    tar xf ccache-4.6.1-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.1-linux-x86_64/ccache && \
-    rm ccache-4.6.1-linux-x86_64.tar.xz
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.6.2/ccache-4.6.2-linux-x86_64.tar.xz && \
+    tar xf ccache-4.6.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.6.2-linux-x86_64/ccache && \
+    rm ccache-*-linux-x86_64.tar.xz
 
 # By default, we use a Docker bind mount to share the repo with the host,
 # with Docker run option:
