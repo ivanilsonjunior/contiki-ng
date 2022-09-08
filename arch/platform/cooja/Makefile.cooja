@@ -21,6 +21,10 @@ ifneq ($(MAKECMDGOALS),clean)
   ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
     $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
   endif
+
+  ifneq ($(BOARD),)
+    $(error Cooja motes do not support boards, please remove the configuration 'BOARD=$(BOARD)')
+  endif
 endif
 endif
 
@@ -68,14 +72,10 @@ JAVA_CFLAGS = -I"$(JAVA_INCDIR)/include" -I"$(JAVA_INCDIR)/include/$(JAVA_OS_NAM
 
 ### Assuming simulator quickstart if no JNI library name set from Cooja
 ifndef LIBNAME
-ifneq ($(MAKECMDGOALS),clean)
-
 CURDIR := $(shell pwd)
 
-.PHONY: $(MAKECMDGOALS)
-$(MAKECMDGOALS):
-	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_DIR) run --args="-quickstart=$(addprefix $(CURDIR)/,$(firstword $(MAKECMDGOALS))) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
-endif
+%.csc %.csc.gz: FORCE
+	$(Q)$(GRADLE) --no-watch-fs --parallel --build-cache -p $(COOJA_DIR) run --args="-quickstart=$(addprefix $(CURDIR)/,$@) -contiki=$(realpath $(CONTIKI)) -logdir=$(CURDIR)"
 endif ## QUICKSTART
 
 # No stack end symbol available, code does not work on 64-bit architectures.
