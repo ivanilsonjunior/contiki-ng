@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
+ * Copyright (C) 2021 Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,11 +35,11 @@
  * \addtogroup nrf-dev Device drivers
  * @{
  *
- * \addtogroup nrf-uarte UARTE driver
+ * \addtogroup nrf-usb USB driver
  * @{
  *
  * \file
- *         UARTE implementation for the nRF.
+ *         USB implementation for the nRF.
  * \author
  *         Yago Fontoura do Rosario <yago.rosario@hotmail.com.br>
  *
@@ -47,79 +47,67 @@
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 /*---------------------------------------------------------------------------*/
-#if NRF_HAS_UARTE
+#if NRF_HAS_USB
 /*---------------------------------------------------------------------------*/
-#include "nrfx_config.h"
-#include "nrfx_uarte.h"
-#include "hal/nrf_gpio.h"
+#include "usb.h"
+#include "usb_descriptors.h"
+
+#include "nrfx.h"
+#include "nrfx_power.h"
+#include "nrf_ficr.h"
 /*---------------------------------------------------------------------------*/
-static int (*input_handler)(unsigned char c) = NULL;
+extern void tusb_hal_nrf_power_event(uint32_t event);
 /*---------------------------------------------------------------------------*/
-static nrfx_uarte_t instance = NRFX_UARTE_INSTANCE(0);
-static uint8_t uarte_buffer;
+#define SERIAL_NUMBER_STRING_SIZE 12
+/*---------------------------------------------------------------------------*/
+static char serial[SERIAL_NUMBER_STRING_SIZE + 1];
 /*---------------------------------------------------------------------------*/
 void
-uarte_write(unsigned char data)
+USBD_IRQHandler(void)
 {
-  do {
-  }  while(nrfx_uarte_tx_in_progress(&instance));
-  nrfx_uarte_tx(&instance, &data, sizeof(data));
+  usb_interrupt_handler();
 }
 /*---------------------------------------------------------------------------*/
-/**
- * @brief UARTE event handler
- *
- * @param p_event UARTE event
- * @param p_context UARTE context
- */
 static void
-uarte_handler(nrfx_uarte_event_t const *p_event, void *p_context)
+power_event_handler(nrfx_power_usb_evt_t event)
 {
-  uint8_t *p_data;
-  size_t bytes;
-  size_t i;
-
-  /* Don't spend time in interrupt if the input_handler is not set */
-  if(p_event->type == NRFX_UARTE_EVT_RX_DONE) {
-    if(input_handler) {
-      p_data = p_event->data.rxtx.p_data;
-      bytes = p_event->data.rxtx.bytes;
-      for(i = 0; i < bytes; i++) {
-        input_handler(p_data[i]);
-      }
-      nrfx_uarte_rx(&instance, &uarte_buffer, sizeof(uarte_buffer));
-    }
-  }
+  tusb_hal_nrf_power_event((uint32_t)event);
 }
 /*---------------------------------------------------------------------------*/
 void
-uarte_set_input(int (*input)(unsigned char c))
+usb_arch_init(void)
 {
-  input_handler = input;
+  const uint16_t serial_num_high_bytes = nrf_ficr_deviceid_get(NRF_FICR, 1) | 0xC000;
+  const uint32_t serial_num_low_bytes  = nrf_ficr_deviceid_get(NRF_FICR, 0);
+  const nrfx_power_config_t power_config = { 0 };
+  const nrfx_power_usbevt_config_t power_usbevt_config = {
+    .handler = power_event_handler
+  };
 
-  if(input) {
-    nrfx_uarte_rx(&instance, &uarte_buffer, sizeof(uarte_buffer));
+  nrfx_power_init(&power_config);
+
+  nrfx_power_usbevt_init(&power_usbevt_config);
+
+  nrfx_power_usbevt_enable();
+
+  // Set up descriptor
+  snprintf(serial,
+                  SERIAL_NUMBER_STRING_SIZE + 1,
+                  "%04"PRIX16"%08"PRIX32,
+                  serial_num_high_bytes,
+                  serial_num_low_bytes);
+
+  usb_descriptor_set_serial(serial);
+
+  nrfx_power_usb_state_t usb_reg = nrfx_power_usbstatus_get();
+  if(usb_reg == NRFX_POWER_USB_STATE_CONNECTED) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_DETECTED);
+  } else if(usb_reg == NRFX_POWER_USB_STATE_READY) {
+    tusb_hal_nrf_power_event(NRFX_POWER_USB_EVT_READY);
   }
 }
 /*---------------------------------------------------------------------------*/
-void
-uarte_init(void)
-{ 
-#if defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
-  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN)
-  const nrfx_uarte_config_t config = NRFX_UARTE_DEFAULT_CONFIG(
-    NRF_GPIO_PIN_MAP(NRF_UARTE0_TX_PORT, NRF_UARTE0_TX_PIN), 
-    NRF_GPIO_PIN_MAP(NRF_UARTE0_RX_PORT, NRF_UARTE0_RX_PIN)
-  );
-
-  nrfx_uarte_init(&instance, &config, uarte_handler);
-#else
-  (void) uarte_handler;
-#endif /* defined(NRF_UARTE0_TX_PORT) && defined(NRF_UARTE0_TX_PIN) \
-  && defined(NRF_UARTE0_RX_PORT) && defined(NRF_UARTE0_RX_PIN) */
-}
-/*---------------------------------------------------------------------------*/
-#endif /* NRF_HAS_UARTE */
+#endif /* NRF_HAS_USB */
 /*---------------------------------------------------------------------------*/
 /**
  * @}
