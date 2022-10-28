@@ -7,6 +7,9 @@
 [submodule "arch/cpu/cc26xx-cc13xx/lib/cc13xxware"]
 	path = arch/cpu/cc26x0-cc13x0/lib/cc13xxware
 	url = https://github.com/contiki-ng/cc13xxware.git
+[submodule "tools/cooja"]
+	path = tools/cooja
+	url = https://github.com/contiki-ng/cooja.git 
 [submodule "tools/sensniff"]
 	path = tools/sensniff
 	url = https://github.com/g-oikonomou/sensniff.git
