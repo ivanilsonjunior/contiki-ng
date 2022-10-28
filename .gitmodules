@@ -34,7 +34,6 @@
 [submodule "arch/cpu/nrf/lib/nrfx"]
 	path = arch/cpu/nrf/lib/nrfx
 	url = https://github.com/NordicSemiconductor/nrfx.git
-<<<<<<< HEAD
 [submodule "pythonLogParser"]
 	path = pythonLogParser
 	url = https://github.com/ivanilsonjunior/pythonLogParser/
@@ -44,8 +43,9 @@
 [submodule "examples/minimalplus"]
 	path = examples/minimalplus
 	url = https://github.com/ivanilsonjunior/minimalplus.git
-=======
 [submodule "arch/cpu/nrf/lib/tinyusb"]
 	path = arch/cpu/nrf/lib/tinyusb
 	url = https://github.com/hathach/tinyusb_src.git
->>>>>>> a2c645f0ef271058b14c79baad803750578a1631
+[submodule "examples/RippleTrickle"]
+	path = examples/RippleTrickle
+	url = git@github.com:ivanilsonjunior/RippleTrickle.git
