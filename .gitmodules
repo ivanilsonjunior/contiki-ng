@@ -46,6 +46,9 @@
 [submodule "os/net/security/micro-ecc"]
 	path = os/net/security/micro-ecc
 	url = https://github.com/kmackay/micro-ecc
+[submodule "examples/RippleTrickle"]
+	path = examples/RippleTrickle
+	url = git@github.com:ivanilsonjunior/RippleTrickle.git
 [submodule "examples/pythonLogParser"]
 	path = examples/pythonLogParser
 	url = git@github.com:ivanilsonjunior/pythonLogParser.git
