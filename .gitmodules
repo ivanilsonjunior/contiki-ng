@@ -44,5 +44,5 @@
 	path = arch/cpu/gecko/lib/gecko_sdk
 	url = https://github.com/SiliconLabs/gecko_sdk.git
 [submodule "examples/pythonLogParser"]
-	path = aexamples/pythonLogParser
+	path = examples/pythonLogParser
 	url = git@github.com:ivanilsonjunior/pythonLogParser.git 
