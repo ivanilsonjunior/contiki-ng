@@ -43,6 +43,9 @@
 [submodule "arch/cpu/gecko/lib/gecko_sdk"]
 	path = arch/cpu/gecko/lib/gecko_sdk
 	url = https://github.com/SiliconLabs/gecko_sdk.git
+[submodule "examples/RippleTrickle"]
+	path = examples/RippleTrickle
+	url = git@github.com:ivanilsonjunior/RippleTrickle.git
 [submodule "examples/pythonLogParser"]
 	path = examples/pythonLogParser
-	url = git@github.com:ivanilsonjunior/pythonLogParser.git 
+	url = git@github.com:ivanilsonjunior/pythonLogParser.git
