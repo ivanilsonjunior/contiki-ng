@@ -130,6 +130,16 @@
 #endif /* RPL_CONF_WITH_DAO_ACK */
 
 /*
+ * RPL DAO-ACK support. When enabled, DAO-ACK will be sent and requested.
+ * This will also enable retransmission of DAO when no ack is received.
+ * */
+#ifdef RPL_CONF_WITH_RIPPLETRICKLE
+#define RPL_WITH_RIPPLETRICKLE RPL_CONF_WITH_RIPPLETRICKLE
+#else
+#define RPL_WITH_RIPPLETRICKLE 0
+#endif /* RPL_CONF_RIPPLETRICKLE */
+
+/*
  * Setting the RPL_TRICKLE_REFRESH_DAO_ROUTES will make the RPL root
  * increase the DTSN (Destination Advertisement Trigger Sequence Number)
  * from the DIO trickle timer. If set to 4, DTSN will be increased every 4th

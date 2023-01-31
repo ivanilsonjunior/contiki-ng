@@ -390,6 +390,9 @@ update_nbr_from_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* Update neighbor info from DIO */
   nbr->rank = dio->rank;
   nbr->dtsn = dio->dtsn;
+  #if RPL_WITH_RIPPLETRICKLE
+  nbr->upDemand = curr_instance.demand;
+  #endif /* RPL_WITH_RIPPLETRICKLE */
 #if RPL_WITH_MC
   memcpy(&nbr->mc, &dio->mc, sizeof(nbr->mc));
 #endif /* RPL_WITH_MC */
@@ -641,6 +644,11 @@ rpl_process_dao(uip_ipaddr_t *from, rpl_dao_t *dao)
     }
   }
 
+#if RPL_WITH_RIPPLETRICKLE
+  rpl_nbr_t *daoNode = rpl_neighbor_get_from_ipaddr(from);
+  if (daoNode != NULL) daoNode->downDemand = curr_instance.demand;
+#endif
+
 #if RPL_WITH_DAO_ACK
   if(dao->flags & RPL_DAO_K_FLAG) {
     rpl_timers_schedule_dao_ack(from, dao->sequence);
@@ -747,6 +755,10 @@ rpl_dag_init_root(uint8_t instance_id, uip_ipaddr_t *dag_id,
   /* dio_intcurrent will be reset by rpl_timers_dio_reset() */
   curr_instance.dag.dio_intcurrent = 0;
   curr_instance.dag.state = DAG_REACHABLE;
+
+#if RPL_WITH_RIPPLETRICKLE
+  curr_instance.demand = 0;
+#endif
 
   rpl_timers_dio_reset("Init root");
 

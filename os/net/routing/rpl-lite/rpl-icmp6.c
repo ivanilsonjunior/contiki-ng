@@ -220,6 +220,10 @@ dio_input(void)
     subopt_type = buffer[i];
     if(subopt_type == RPL_OPTION_PAD1) {
       len = 1;
+    #if RPL_WITH_RIPPLETRICKLE
+    } else if (subopt_type == RPL_OPTION_RT_DEMAND) {
+      len = 2;
+    #endif /* RPL_WITH_RIPPLETRICKLE */
     } else {
       /* Suboption with a two-byte header + payload */
       len = 2 + buffer[i + 1];
@@ -306,6 +310,12 @@ dio_input(void)
         /* 32-bit reserved at i + 12 */
         memcpy(&dio.prefix_info.prefix, &buffer[i + 16], 16);
         break;
+      #if RPL_WITH_RIPPLETRICKLE
+      case RPL_OPTION_RT_DEMAND:
+        LOG_WARN("dio_input: RT demand %u\n", buffer[i+1]);
+        curr_instance.demand = buffer[i+1];
+        break;
+      #endif /* RPL_WITH_RIPPLETRICKLE */
       default:
         LOG_WARN("dio_input: unsupported suboption type in DIO: %u, discard\n", (unsigned)subopt_type);
         goto discard;
@@ -437,6 +447,18 @@ rpl_icmp6_dio_output(uip_ipaddr_t *uc_addr)
     memcpy(&buffer[pos], &curr_instance.dag.prefix_info.prefix, 16);
     pos += 16;
   }
+#if RPL_WITH_RIPPLETRICKLE
+/*RippleTrickle Block, only send to default parent*/
+
+  uip_ipaddr_t *parent_ipaddr = rpl_neighbor_get_ipaddr(curr_instance.dag.preferred_parent);
+  LOG_INFO("DIO - PAI: ");
+  LOG_INFO_6ADDR(parent_ipaddr);
+  LOG_INFO("-  Destino: ");
+  LOG_INFO_6ADDR(addr);
+  LOG_INFO_("\n");
+  buffer[pos++] = RPL_OPTION_RT_DEMAND;
+  buffer[pos++] = curr_instance.demand;
+#endif /* RPL_WITH_RIPPLETRICKLE */
 
   if(!rpl_get_leaf_only()) {
     addr = addr != NULL ? addr : &rpl_multicast_addr;
@@ -500,6 +522,10 @@ dao_input(void)
     subopt_type = buffer[i];
     if(subopt_type == RPL_OPTION_PAD1) {
       len = 1;
+    #if RPL_WITH_RIPPLETRICKLE
+    } else if (subopt_type == RPL_OPTION_RT_DEMAND) {
+      len = 2;
+    #endif /* RPL_WITH_RIPPLETRICKLE */
     } else {
       /* The option consists of a two-byte header and a payload. */
       len = 2 + buffer[i + 1];
@@ -521,6 +547,14 @@ dao_input(void)
           memcpy(&dao.parent_addr, buffer + i + 6, 16);
         }
         break;
+      #if RPL_WITH_RIPPLETRICKLE
+      case RPL_OPTION_RT_DEMAND:
+        LOG_WARN("dao_input: RT demand %u\n", buffer[i+1]);
+        LOG_WARN_(" \n");
+        //rpl_nbr_t *daoNode = rpl_neighbor_get_from_ipaddr(&from);
+        //daoNode->downDemand = 1;
+        break;
+      #endif /* RPL_WITH_RIPPLETRICKLE */
     }
   }
 
@@ -589,6 +623,20 @@ rpl_icmp6_dao_output(uint8_t lifetime)
   buffer[pos++] = prefixlen;
   memcpy(buffer + pos, prefix, (prefixlen + 7) / CHAR_BIT);
   pos += ((prefixlen + 7) / CHAR_BIT);
+
+#if RPL_WITH_RIPPLETRICKLE
+
+  /*RippleTrickle Block, only send to default parent*/
+
+  LOG_DBG("DAO - PARENT: ");
+  LOG_DBG_6ADDR(parent_ipaddr);
+  LOG_DBG("-  Destination: ");
+  LOG_DBG_6ADDR(&curr_instance.dag.dag_id);
+  LOG_DBG_("\n");
+  buffer[pos++] = RPL_OPTION_RT_DEMAND;
+  buffer[pos++] = curr_instance.demand;
+
+#endif /* RPL_WITH_RIPPLETRICKLE */
 
   /* Create a transit information sub-option. */
   buffer[pos++] = RPL_OPTION_TRANSIT;

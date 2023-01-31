@@ -142,6 +142,10 @@ struct rpl_nbr {
 #endif /* RPL_WITH_MC */
   rpl_rank_t rank;
   uint8_t dtsn;
+#if RPL_WITH_RIPPLETRICKLE
+  uint8_t upDemand; // Learned from DIO
+  uint8_t downDemand; // Learned from DAO                                                                                                  
+#endif /* RPL_WITH_RIPPLETRICKLE */
 };
 typedef struct rpl_nbr rpl_nbr_t;
 
@@ -239,6 +243,9 @@ struct rpl_instance {
   uint8_t default_lifetime;
   uint16_t lifetime_unit; /* lifetime in seconds = lifetime_unit * default_lifetime */
   rpl_dag_t dag; /* We support only one dag */
+  #if RPL_WITH_RIPPLETRICKLE
+    uint8_t demand;
+  #endif /* RPL_WITH_RIPPLETRICKLE */
 };
 typedef struct rpl_instance rpl_instance_t;
 
