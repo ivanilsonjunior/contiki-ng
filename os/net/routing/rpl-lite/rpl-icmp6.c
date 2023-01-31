@@ -550,7 +550,6 @@ dao_input(void)
       #if RPL_WITH_RIPPLETRICKLE
       case RPL_OPTION_RT_DEMAND:
         LOG_WARN("dao_input: RT demand %u\n", buffer[i+1]);
-        LOG_WARN_(" \n");
         //rpl_nbr_t *daoNode = rpl_neighbor_get_from_ipaddr(&from);
         //daoNode->downDemand = 1;
         break;
