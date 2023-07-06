@@ -869,7 +869,7 @@ rpl_select_dag(rpl_instance_t *instance, rpl_parent_t *p)
       rpl_print_neighbor_list();
     }
   } else if(best_dag->rank != old_rank) {
-    LOG_DBG("RPL: Preferred parent update, rank changed from %u to %u\n",
+    LOG_DBG("Preferred parent update, rank changed from %u to %u\n",
             (unsigned)old_rank, best_dag->rank);
   }
   return best_dag;
@@ -1423,7 +1423,8 @@ rpl_process_parent_event(rpl_instance_t *instance, rpl_parent_t *p)
   if(RPL_IS_STORING(instance)
      && uip_ds6_route_is_nexthop(rpl_parent_get_ipaddr(p))
      && !rpl_parent_is_reachable(p) && instance->mop > RPL_MOP_NON_STORING) {
-    LOG_WARN("Unacceptable link %u, removing routes via: ", rpl_get_parent_link_metric(p));
+    LOG_WARN("Unacceptable link %u, removing routes via: ",
+             rpl_get_parent_link_metric(p));
     LOG_WARN_6ADDR(rpl_parent_get_ipaddr(p));
     LOG_WARN_("\n");
     rpl_remove_routes_by_nexthop(rpl_parent_get_ipaddr(p), p->dag);
@@ -1605,9 +1606,9 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* The DIO comes from a valid DAG, so we can refresh its lifetime. */
   dag->lifetime = (1UL << (instance->dio_intmin + instance->dio_intdoubl)) *
     RPL_DAG_LIFETIME / 1000;
-  LOG_INFO("Set DAG ");
-  LOG_INFO_6ADDR(&dag->dag_id);
-  LOG_INFO_(" lifetime to %ld\n", (long int)dag->lifetime);
+  LOG_DBG("Set DAG ");
+  LOG_DBG_6ADDR(&dag->dag_id);
+  LOG_DBG_(" lifetime to %ld\n", (long int)dag->lifetime);
 
   /*
    * At this point, we know that this DIO pertains to a DAG that we
@@ -1655,7 +1656,7 @@ rpl_process_dio(uip_ipaddr_t *from, rpl_dio_t *dio)
   /* Parent info has been updated, trigger rank recalculation. */
   p->flags |= RPL_PARENT_FLAG_UPDATED;
 
-  LOG_INFO("preferred DAG ");
+  LOG_INFO("Preferred DAG ");
   LOG_INFO_6ADDR(&instance->current_dag->dag_id);
   LOG_INFO_(", rank %u, min_rank %u, ",
             instance->current_dag->rank, instance->current_dag->min_rank);

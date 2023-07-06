@@ -105,7 +105,9 @@ RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other
 ARG RENODE_VERSION=1.13.0
 RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
+  && python3 -m pip -q install -r /opt/renode/tests/requirements.txt \
   && rm renode_${RENODE_VERSION}_amd64.deb \
+  && rm -rf /root/.cache \
   && apt-get -qq clean
 
 RUN wget -nv https://www.silabs.com/documents/public/software/SimplicityCommander-Linux.zip && \
@@ -161,8 +163,8 @@ RUN wget -nv https://sourceforge.net/projects/doxygen/files/rel-1.9.4/doxygen-1.
     tar zxf doxygen-1.9.4.linux.bin.tar.gz -C ${HOME}/.local && \
     rm -rf ${HOME}/.local/doxygen-1.9.4/html ${HOME}/.local/doxygen-1.9.4/*.pdf doxygen-1.9.4.linux.bin.tar.gz && \
     (cd ${HOME}/.local/bin && ln -s ../doxygen-1.9.4/bin/doxygen .) && \
-    wget -nv https://github.com/ccache/ccache/releases/download/v4.7.4/ccache-4.7.4-linux-x86_64.tar.xz && \
-    tar xf ccache-4.7.4-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.7.4-linux-x86_64/ccache && \
+    wget -nv https://github.com/ccache/ccache/releases/download/v4.8.2/ccache-4.8.2-linux-x86_64.tar.xz && \
+    tar xf ccache-4.8.2-linux-x86_64.tar.xz -C ${HOME}/.local/bin --strip-components=1 ccache-4.8.2-linux-x86_64/ccache && \
     rm ccache-*-linux-x86_64.tar.xz
 
 # By default, we use a Docker bind mount to share the repo with the host,
