@@ -2,10 +2,11 @@ CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
 BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 EXAMPLESDIR=../../examples
-TOOLSDIR=../../tools
 
 EXAMPLES = \
+6tisch/simple-node/z1:MAKE_WITH_PERIODIC_ROUTES_PRINT=1 \
 hello-world/native \
+hello-world/native:DEFINES=UIP_CONF_UDP=0 \
 hello-world/native:MAKE_NET=MAKE_NET_NULLNET \
 hello-world/native:MAKE_ROUTING=MAKE_ROUTING_RPL_CLASSIC \
 hello-world/z1 \
@@ -31,7 +32,5 @@ dev/dht11/z1 \
 snmp-server/native \
 snmp-server/sky \
 snmp-server/z1 \
-
-TOOLS=
 
 include ../Makefile.compile-test

@@ -1,9 +1,7 @@
 CURDIR := $(abspath $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST)))))
-# FIXME: Uncomment the next line after the cortex-m customrules are removed.
-# BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
+BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 EXAMPLESDIR=../../examples
-TOOLSDIR=../../tools
 
 EXAMPLES = \
 6tisch/6p-packet/zoul \
@@ -67,8 +65,34 @@ libs/logging/zoul \
 libs/logging/zoul:MAKE_MAC=MAKE_MAC_TSCH \
 libs/shell/openmote \
 libs/simple-energest/openmote \
+libs/stack-check/cc26x0-cc13x0:BOARD=srf06/cc13x0 \
+libs/stack-check/cc26x0-cc13x0:BOARD=launchpad/cc2640r2 \
+libs/stack-check/cc26x0-cc13x0:BOARD=launchpad/cc2650 \
+libs/stack-check/cc26x0-cc13x0:BOARD=launchpad/cc1310 \
+libs/stack-check/cc26x0-cc13x0:BOARD=launchpad/cc1350 \
+libs/stack-check/gecko:BOARD=brd4162a \
+libs/stack-check/gecko:BOARD=brd4166a \
+libs/stack-check/nrf:BOARD=nrf52840/dk \
+libs/stack-check/nrf:BOARD=nrf52840/dongle \
+libs/stack-check/nrf:BOARD=nrf5340/dk/application \
+libs/stack-check/nrf52840:BOARD=dk \
+libs/stack-check/nrf52840:BOARD=dongle \
+libs/stack-check/openmote \
+libs/stack-check/simplelink:BOARD=srf06/cc13x0 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1310 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1312r1 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1350 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1350-4 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1352p-2 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1352p-4 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1352p1 \
+libs/stack-check/simplelink:BOARD=launchpad/cc1352r1 \
+libs/stack-check/simplelink:BOARD=launchpad/cc2650 \
+libs/stack-check/zoul \
+libs/stack-check/zoul:BOARD=orion \
 libs/timers/zoul \
 libs/trickle-library/zoul \
+libs/csprng/openmote \
 lwm2m-ipso-objects/zoul:DEFINES=LWM2M_Q_MODE_CONF_ENABLED=1,LWM2M_Q_MODE_CONF_INCLUDE_DYNAMIC_ADAPTATION=1\
 lwm2m-ipso-objects/zoul:MAKE_WITH_DTLS=1 \
 mqtt-client/simplelink:BOARD=sensortag/cc2650:DEFINES=BOARD_CONF_SENSORS_DISABLE=1,TI_SPI_CONF_ENABLE=0 \
@@ -112,7 +136,5 @@ storage/cfs-coffee/zoul \
 storage/cfs-coffee/gecko:BOARD=brd4162a \
 storage/cfs-coffee/gecko:BOARD=brd4166a \
 websocket/zoul \
-
-TOOLS=
 
 include ../Makefile.compile-test

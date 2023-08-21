@@ -66,20 +66,11 @@ RUN apt-get -qq update && \
     snmp \
     snmp-mibs-downloader \
     > /dev/null && \
-  wget -nv https://github.com/dongjinleekr/graalvm-ce-deb/releases/download/22.2.0-0/graalvm-ce-java17_amd64_22.2.0-0.deb && \
-  dpkg --unpack graalvm-ce-java17_amd64_22.2.0-0.deb && \
-  apt-get -qq -y --no-install-recommends install \
-    ca-certificates-java \
-    java-common \
-    libnss3 \
-    libnspr4 \
-    libsqlite3-0 \
-    > /dev/null && \
-  apt-get -qq -y --no-install-recommends install \
-    ant \
-    > /dev/null && \
-  rm graalvm-ce-java17_amd64_22.2.0-0.deb && \
   apt-get -qq clean
+
+RUN wget -nv https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-17.0.7/graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz && \
+  tar xf graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
+  rm -f graalvm*gz
 
 # Install ARM toolchain
 RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
@@ -93,16 +84,14 @@ RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 &
   rm -rf /tmp/msp430 mspgcc*.tar.bz2
 
 # Install nRF Command Line tools
-RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools_10.17.3_amd64.deb && \
-  wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-17-3/nrf-command-line-tools-10.17.3_linux-amd64.tar.gz && \
-  apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.17.3_amd64.deb > /dev/null && \
-  tar zxf nrf-command-line-tools-10.17.3_linux-amd64.tar.gz ./JLink_Linux_V766a_x86_64.deb && \
-  apt-get -qq -y --no-install-recommends install ./JLink_Linux_V766a_x86_64.deb > /dev/null && \
-  rm -f *.deb *.tar.gz && \
+RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-22-0/nrf-command-line-tools_10.22.0_amd64.deb && \
+  apt-get -qq -y --no-install-recommends install ./nrf-command-line-tools_10.22.0_amd64.deb > /dev/null && \
+  apt-get -qq -y --no-install-recommends install /opt/nrf-command-line-tools/share/JLink_Linux_V780c_x86_64.deb > /dev/null && \
+  rm -f *.deb *.tar.gz /opt/nrf-command-line-tools/share/JLink_*deb && \
   apt-get -qq clean
 
 # Install Renode from github releases
-ARG RENODE_VERSION=1.13.0
+ARG RENODE_VERSION=1.14.0
 RUN wget -nv https://github.com/renode/renode/releases/download/v${RENODE_VERSION}/renode_${RENODE_VERSION}_amd64.deb \
   && apt-get -qq -y --no-install-recommends install ./renode_${RENODE_VERSION}_amd64.deb > /dev/null \
   && python3 -m pip -q install -r /opt/renode/tests/requirements.txt \

@@ -41,9 +41,7 @@
 #include "native-def.h"
 /*---------------------------------------------------------------------------*/
 #include <inttypes.h>
-#ifndef WIN32_LEAN_AND_MEAN
 #include <sys/select.h>
-#endif
 
 struct select_callback {
   int  (* set_fd)(fd_set *fdr, fd_set *fdw);
@@ -103,10 +101,6 @@ typedef unsigned long clock_time_t;
 #define LOG_CONF_ENABLED 1
 
 #define PLATFORM_SUPPORTS_BUTTON_HAL 1
-
-/* Not part of C99 but actually present */
-int strcasecmp(const char*, const char*);
-
 #define PLATFORM_CONF_PROVIDES_MAIN_LOOP 1
 #define PLATFORM_CONF_MAIN_ACCEPTS_ARGS  1
 #define PLATFORM_CONF_SUPPORTS_STACK_CHECK 0
