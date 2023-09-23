@@ -1,11 +1,4 @@
-## The COOJA Simulator Contiki platform Makefile
-##
-## This makefile should normally never be called directly, but
-## rather from inside the COOJA simulator.
-## The purpose of this file is to compile a shared library that
-## can be loaded into the Java part of COOJA.
-
-EXPECTED_COOJA_VERSION = 2022071901
+EXPECTED_COOJA_VERSION = 2023090701
 
 ifndef CONTIKI
   $(error CONTIKI not defined!)
@@ -13,17 +6,13 @@ endif
 
 # Detect incompatible Cooja versions when not performing "make clean".
 ifneq ($(MAKECMDGOALS),clean)
-  ifndef LIBNAME
-    $(warning Cooja target should be built by Cooja)
-    $(error Use TARGET=native for quickstarting a .csc simulation file)
-  endif
-
-  ifndef COOJA_VERSION
-    $(error COOJA_VERSION not defined, please upgrade Cooja)
-  endif
-
-  ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
-    $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+  ifndef COOJA_CI
+    # If LIBNAME is set, build is done under Cooja.
+    ifdef LIBNAME
+      ifneq ($(COOJA_VERSION),$(EXPECTED_COOJA_VERSION))
+        $(error Got COOJA_VERSION $(COOJA_VERSION) but expected $(EXPECTED_COOJA_VERSION))
+      endif
+    endif
   endif
 
   ifneq ($(BOARD),)
@@ -63,12 +52,12 @@ MODULES_SOURCES_EXCLUDES += stack-check.c
 MODULES_SOURCES_EXCLUDES += spi.c
 
 ### COOJA platform sources
-CONTIKI_TARGET_DIRS = . dev lib sys cfs
+CONTIKI_TARGET_DIRS = . dev sys cfs
 
 # (COOJA_SOURCEDIRS contains additional sources dirs set from simulator)
 vpath %.c $(COOJA_SOURCEDIRS)
 
-COOJA_BASE	= simEnvChange.c cooja_mt.c rtimer-arch.c watchdog.c int-master.c
+COOJA_BASE	= cooja_mt.c rtimer-arch.c watchdog.c int-master.c
 
 COOJA_INTFS	= beep.c ip.c leds-arch.c moteid.c \
 		    pir-sensor.c rs232.c vib-sensor.c \

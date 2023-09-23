@@ -7,6 +7,7 @@ USER root
 
 # Tools
 # build-essential: development tools.
+# clang-15: additional warnings in tests.
 # gdb: development tools.
 # git: development tools.
 # git-lfs: development tools (used by Gecko SDK).
@@ -33,6 +34,7 @@ RUN apt-get -qq update && \
       ca-certificates > /dev/null && \
   apt-get -qq -y --no-install-recommends install \
     build-essential \
+    clang-15 \
     gdb \
     git \
     git-lfs \
@@ -68,8 +70,9 @@ RUN apt-get -qq update && \
     > /dev/null && \
   apt-get -qq clean
 
-RUN wget -nv https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-17.0.7/graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz && \
-  tar xf graalvm-community-jdk-17.0.7_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
+ARG JAVA_VERSION=20
+RUN wget -nv https://download.oracle.com/graalvm/${JAVA_VERSION}/latest/graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz && \
+  tar xf graalvm-jdk-${JAVA_VERSION}_linux-x64_bin.tar.gz -C /usr/local --strip-components=1 --no-same-owner && \
   rm -f graalvm*gz
 
 # Install ARM toolchain
@@ -78,10 +81,9 @@ RUN wget -nv https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.
   rm -f gcc-arm-none-eabi-*-linux.tar.bz2
 
 # Install msp430 toolchain
-RUN wget -nv http://simonduq.github.io/resources/mspgcc-4.7.2-compiled.tar.bz2 && \
-  tar xjf mspgcc*.tar.bz2 -C /tmp/ && \
-  cp -f -r /tmp/msp430/* /usr/local/ && \
-  rm -rf /tmp/msp430 mspgcc*.tar.bz2
+RUN wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.0/mspgcc-4.7.4-linux-x86_64.tar.bz2 && \
+  tar xf mspgcc*.tar.bz2 -C /usr/local --no-same-owner && \
+  rm -f mspgcc*.tar.bz2
 
 # Install nRF Command Line tools
 RUN wget -nv https://nsscprodmedia.blob.core.windows.net/prod/software-and-other-downloads/desktop-software/nrf-command-line-tools/sw/versions-10-x-x/10-22-0/nrf-command-line-tools_10.22.0_amd64.deb && \
