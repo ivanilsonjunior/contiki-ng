@@ -4,11 +4,21 @@ BINARY_SIZE_LOGFILE = $(CURDIR)/sizes.log
 
 ifeq ($(CI), true)
   OUT_OF_TREE_TEST ?= 1
+  # Use a fixed directory for CI to improve ccache hit rate.
+  OUT_OF_TREE_BASE = $(HOME)
+  CLEANUP_CMD = true
 else
   Q ?= @
+  ifeq ($(OUT_OF_TREE_TEST), 1)
+    # Create a temporary directory for out-of-tree tests.
+    ifeq ($(MAKELEVEL), 0)
+      OUT_OF_TREE_BASE := $(shell mktemp -d)
+      CLEANUP_CMD = rm -rf $(OUT_OF_TREE_BASE)/out-of-tree-tests && rmdir $(OUT_OF_TREE_BASE)
+    endif
+  endif
 endif
 
-OUT_OF_TREE_EXAMPLESDIR = $(HOME)/out-of-tree-tests
+OUT_OF_TREE_EXAMPLESDIR = $(OUT_OF_TREE_BASE)/out-of-tree-tests
 
 OUT_OF_TREE_EXAMPLES = \
 hello-world/native \
@@ -30,6 +40,7 @@ preparation: | $(DIR_TARGET)
 	@cp -a $(CONTIKI_DIR)/examples/hello-world $(OUT_OF_TREE_EXAMPLESDIR)
 	@perl -pi -e "s|^CONTIKI =.*$$|CONTIKI = $(CONTIKI_DIR)|g" $(OUT_OF_TREE_EXAMPLESDIR)/hello-world/Makefile
 	$(Q)$(MAKE) EXAMPLES="$(OUT_OF_TREE_EXAMPLES)" EXAMPLESDIR=$(OUT_OF_TREE_EXAMPLESDIR) all
+	$(Q)$(CLEANUP_CMD)
 	$(Q)$(MAKE) OUT_OF_TREE_TEST=0 all
 
 $(DIR_ABSENT):
@@ -56,9 +67,9 @@ EXAMPLES = \
 benchmarks/rpl-req-resp/zoul \
 coap/coap-example-client/zoul \
 coap/coap-example-server/zoul \
+dev/button-hal/gecko:BOARD=brd4162a \
+dev/button-hal/gecko:BOARD=brd4166a \
 dev/gpio-hal/zoul:BOARD=orion \
-dev/gpio-hal/gecko:BOARD=brd4162a \
-dev/gpio-hal/gecko:BOARD=brd4166a \
 dev/leds/simplelink:BOARD=srf06/cc26x0 \
 dev/leds/gecko:BOARD=brd4162a \
 dev/leds/gecko:BOARD=brd4166a \
@@ -148,6 +159,7 @@ platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1350 \
 platform-specific/cc26x0-cc13x0/base-demo/simplelink:BOARD=sensortag/cc1352r1 \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/application \
 platform-specific/nrf/start-network-core/nrf:BOARD=nrf5340/dk/network \
+platform-specific/nrf/trustzone/nrf:BOARD=nrf5340/dk/application \
 platform-specific/zoul/at-test/zoul \
 platform-specific/zoul/orion/client/zoul:BOARD=orion \
 platform-specific/zoul/orion/ip64-router/zoul:BOARD=orion \

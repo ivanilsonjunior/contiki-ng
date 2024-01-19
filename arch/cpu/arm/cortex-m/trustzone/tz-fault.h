@@ -1,15 +1,18 @@
 /*
- * Copyright (c) 2014, Thingsquare, http://www.thingsquare.com/.
+ * Copyright (c) 2023, RISE Research Institutes of Sweden
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
+ *
  * 1. Redistributions of source code must retain the above copyright
  *    notice, this list of conditions and the following disclaimer.
+ *
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
+ *
  * 3. Neither the name of the copyright holder nor the names of its
  *    contributors may be used to endorse or promote products derived
  *    from this software without specific prior written permission.
@@ -26,44 +29,19 @@
  * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
  * OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
  */
-/*--------------------------------------------------------------------------*/
-/**
- * \addtogroup openmote-cc2538
- * @{
- *
- * \defgroup openmote-antenna OpenMote-CC2538 antenna switch
- *
- * Driver for the OpenMote-CC2538 antenna switch
- * @{
- *
+
+/*
  * \file
- * Header for the OpenMote-CC2538 antenna switch
+ *      ARMv8-M fault handling.
+ * \author
+ *      Nicolas Tsiftes <nicolas.tsiftes@ri.se>
+ *      Niclas Finne <niclas.finne@ri.se>
  */
-/*---------------------------------------------------------------------------*/
-#ifndef ANTENNA_H_
-#define ANTENNA_H_
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Initialize the antenna switch, by default it uses the external
- */
-void antenna_init(void);
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Select the external (connector) antenna
- */
-void antenna_internal(void);
-/*---------------------------------------------------------------------------*/
-/**
- * \brief Select the internal (chip) antenna
- */
-void antenna_external(void);
-/*---------------------------------------------------------------------------*/
-#endif /* ANTENNA_H_ */
-/**
- * @}
- * @}
- */
+
+#ifndef TZ_FAULT_H_
+#define TZ_FAULT_H_
+
+void tz_fault_init(void);
+
+#endif /* TZ_FAULT_H_ */

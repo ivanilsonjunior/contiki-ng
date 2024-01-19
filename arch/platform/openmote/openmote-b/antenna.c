@@ -32,45 +32,48 @@
  */
 /*---------------------------------------------------------------------------*/
 /**
- * \addtogroup openmote-antenna
+ * \addtogroup openmote-b-antenna
  * @{
  *
- * Driver for the OpenMote-CC2538 RF switch.
- * INT is the internal antenna (chip) configured through ANT1_SEL (V1)
- * EXT is the external antenna (connector) configured through ANT2_SEL (V2)
+ * Driver for the OpenMote-B RF switch. The 2.4 GHz SMA connector can be
+ * connected to either:
+ * - CC2538 radio, configured through antenna_select_cc2538()
+ * - AT86RF215 radio, configured through antenna_select_at86rf215()
+ *
+ * Note that the sub-GHz SMA connector on the board is always connected to
+ * the AT86RF215 radio.
  * @{
  *
  * \file
- * Driver implementation for the OpenMote-CC2538 antenna switch
+ * Driver implementation for the OpenMote-B antenna switch
  */
 /*---------------------------------------------------------------------------*/
 #include "contiki.h"
 #include "dev/gpio.h"
-#include "dev/antenna.h"
+#include "antenna.h"
 /*---------------------------------------------------------------------------*/
 void
 antenna_init(void)
 {
-  /* Configure the ANT1 and ANT2 GPIO as output */
-  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT);
-  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT);
-
-  /* Select external antenna by default. */
-  antenna_external();
+  /* Configure the GPIO pins as output */
+  GPIO_SOFTWARE_CONTROL(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_CC2538);
+  GPIO_SOFTWARE_CONTROL(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_AT86RF215);
+  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_CC2538);
+  GPIO_SET_OUTPUT(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_AT86RF215);
 }
 /*---------------------------------------------------------------------------*/
 void
-antenna_external(void)
+antenna_select_cc2538(void)
 {
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 0);
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 1);
+  GPIO_SET_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_CC2538);
+  GPIO_CLR_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_AT86RF215);
 }
 /*---------------------------------------------------------------------------*/
 void
-antenna_internal(void)
+antenna_select_at86rf215(void)
 {
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_EXT, 0);
-  GPIO_WRITE_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_INT, 1);
+  GPIO_SET_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_AT86RF215);
+  GPIO_CLR_PIN(ANTENNA_BSP_RADIO_BASE, ANTENNA_BSP_RADIO_24GHZ_CC2538);
 }
 /*---------------------------------------------------------------------------*/
 /**

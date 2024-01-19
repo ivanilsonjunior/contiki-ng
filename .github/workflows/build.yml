@@ -41,9 +41,7 @@ jobs:
               # Renode tests done by Linux (more CI runners available).
               - os: macos-latest
                 test: renode-simulation
-              # No msp430-gcc installed.
-              - os: macos-latest
-                test: compile-base
+              # Runs on x86, already have intermittent failures there.
               - os: macos-latest
                 test: simulation-base
               # No arm-none-eabi-gcc installed.
@@ -83,13 +81,15 @@ jobs:
     - name: install macOS software
       if: matrix.os == 'macos-latest'
       run: |
-        brew install coreutils gnu-tar make mosquitto mtr rlwrap
-        # Doxygen 1.9.7 is broken with ifdefs again, install 1.9.4 which works.
-        wget https://raw.githubusercontent.com/Homebrew/homebrew-core/41828ee36b96e35b63b2a4c8cfc2df2c3728944a/Formula/doxygen.rb
+        brew install coreutils make mosquitto mtr rlwrap
+        # Doxygen version needs to be in sync with Doxyfile.
+        wget https://github.com/Homebrew/homebrew-core/raw/f434ee2dce9ae11b27d7450a7cfb7af775a47719/Formula/d/doxygen.rb
         brew install doxygen.rb
         rm doxygen.rb
         python3 -m pip -q install matplotlib
         python3 -m pip -q install -r tools/docker/files/rtd_requirements.txt
+        wget -nv https://github.com/pjonsson/msp430gcc-binary/releases/download/v1.1/mspgcc-4.7.4-macos-x86_64.tar.bz2
+        sudo tar xf mspgcc*.tar.bz2 -C /usr/local --strip-components=1 --no-same-owner
         # Homebrew prefix is different for x86-64 and aarch64.
         export HOMEBREW_PREFIX=/usr/local
         # Put Homebrew installed make, and tar first in PATH so "make"
@@ -177,7 +177,7 @@ jobs:
     #
     # IMPORTANT: cache size must also be updated in the "Execute tests" section.
     - name: ccache
-      uses: hendrikmuhs/ccache-action@v1.2.10
+      uses: hendrikmuhs/ccache-action@v1.2.11
       with:
         key: compilation-${{ matrix.test }}
         max-size: 160M
@@ -208,12 +208,12 @@ jobs:
         # Check outcome of the test
         ./tests/check-test.sh `pwd`/tests/??-${{ matrix.test }}
 
-    # Pre-install a Java 20 on macOS to avoid 503 responses in Gradle.
-    - name: Setup Java 20
+    # Pre-install a Java 21 on macOS to avoid 503 responses in Gradle.
+    - name: Setup Java 21
       if: matrix.os == 'macos-latest'
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
-        java-version: 20
+        java-version: 21
         distribution: 'zulu'
 
     - name: Execute tests

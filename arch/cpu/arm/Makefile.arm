@@ -20,11 +20,14 @@ SREC_CAT = srec_cat
 
 CFLAGS += -mthumb -mabi=aapcs -mlittle-endian
 CFLAGS += -Wall
-CFLAGS += -std=c99
+CFLAGS += -std=c11
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fshort-enums -fomit-frame-pointer
 ifeq ($(TRUSTZONE_SECURE_BUILD),1)
   CFLAGS += -mcmse
+  ifeq ($(CLANG),0)
+    CFLAGS += --specs=nosys.specs
+  endif
 endif
 ifeq ($(WERROR),1)
   CFLAGS += -Werror
