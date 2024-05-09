@@ -46,17 +46,12 @@
 #include "contiki.h"
 #include "lib/list.h"
 
+#include "sys/log.h"
+#define LOG_MODULE "CTimer"
+#define LOG_LEVEL LOG_LEVEL_SYS
+
 LIST(ctimer_list);
-
-static char initialized;
-
-#define DEBUG 0
-#if DEBUG
-#include <stdio.h>
-#define PRINTF(...) printf(__VA_ARGS__)
-#else
-#define PRINTF(...)
-#endif
+static bool initialized;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(ctimer_process, "Ctimer process");
@@ -68,7 +63,7 @@ PROCESS_THREAD(ctimer_process, ev, data)
   for(c = list_head(ctimer_list); c != NULL; c = c->next) {
     etimer_set(&c->etimer, c->etimer.timer.interval);
   }
-  initialized = 1;
+  initialized = true;
 
   while(1) {
     PROCESS_YIELD_UNTIL(ev == PROCESS_EVENT_TIMER);
@@ -90,7 +85,7 @@ PROCESS_THREAD(ctimer_process, ev, data)
 void
 ctimer_init(void)
 {
-  initialized = 0;
+  initialized = false;
   list_init(ctimer_list);
   process_start(&ctimer_process, NULL);
 }
@@ -100,7 +95,7 @@ void
 ctimer_set_with_process(struct ctimer *c, clock_time_t t,
                         void (*f)(void *), void *ptr, struct process *p)
 {
-  PRINTF("ctimer_set %p %lu\n", c, (unsigned long)t);
+  LOG_DBG("ctimer_set %p %lu\n", c, (unsigned long)t);
   c->p = p;
   c->f = f;
   c->ptr = ptr;
